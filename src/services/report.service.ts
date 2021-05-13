@@ -40,6 +40,12 @@ export class ReportService {
 
   async taskCompletedAndUncompletedByJoiner(): Promise<string> {
     let tasks: Array<TaskJoinerDto> = await this.taskFacade.taskCompletedAndUncompletedByJoiner();
+    let tasksJoinerService = await this.fillPresentationData(tasks);
+
+    return this.saveToCsvFile(this.TASKS_JOINER_KEY, tasksJoinerService);
+  }
+
+  private async fillPresentationData(tasks: Array<TaskJoinerDto>): Promise<Array<TaskJoinerService>> {
     const joinerIds = tasks.map((task: TaskJoinerDto) => task.joiner_id);
     const stackIds = tasks.map((task: TaskJoinerDto) => task.stack);
     const roleIds = tasks.flatMap((task: TaskJoinerDto) => task.roles.split(","))
@@ -68,6 +74,13 @@ export class ReportService {
 
       return taskJoinerService;
     });
+
+    return tasksJoinerService;
+  }
+
+  async taskCompletedAndUncompletedFilterByJoiner(joinerId: number): Promise<string> {
+    let tasks: Array<TaskJoinerDto> = await this.taskFacade.taskCompletedAndUncompletedFilterByJoiner(joinerId);
+    let tasksJoinerService = await this.fillPresentationData(tasks);
 
     return this.saveToCsvFile(this.TASKS_JOINER_KEY, tasksJoinerService);
   }

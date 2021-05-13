@@ -21,6 +21,12 @@ export class TaskFacade {
       .then(response => response.data);
   }
 
+  async taskCompletedAndUncompletedFilterByJoiner(joinerId: number): Promise<Array<TaskJoinerDto>> {
+    return this.httpService.get(`${this.TASK_HOST}/api/reports/joiners/${joinerId}/tasks`)
+      .toPromise()
+      .then(response => response.data);
+  }
+
   async daysLeftToCompleteTaskByJoiner(): Promise<Array<TaskDayDto>> {
     return this.httpService.get(`${this.TASK_HOST}/api/reports/days`)
       .toPromise()
