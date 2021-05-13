@@ -5,15 +5,21 @@ import { JoinerFacade } from 'src/facades/joiner.facade';
 import { TaskFacade } from 'src/facades/task.facade';
 import { TaskStackDto as TaskStackService } from './dtos/task-stack.dto';
 import { TaskDayDto as TaskDayService } from './dtos/task-day.dto';
+import { TaskJoinerDto as TaskJoinerService } from './dtos/task-joiner.dto';
 
 import { v4 as uuidv4 } from 'uuid';
-import { TaskDayDto } from 'src/facades/dtos/task-day';
+import { TaskDayDto } from 'src/facades/dtos/task-day.dto';
+import { TaskJoinerDto } from 'src/facades/dtos/task-joiner.dto';
+import { StackDto } from 'src/facades/dtos/stack.dto';
+import { RoleDto } from 'src/facades/dtos/role.dto';
+
 const ObjectsToCsv = require('objects-to-csv');
 
 @Injectable()
 export class ReportService {
   private TASK_STACK_KEY: string = 'task_stack';
   private TASK_DAY_KEY: string = 'task_day';
+  private TASKS_JOINER_KEY: string = 'tasks_joiner';
 
   constructor(private taskFacade: TaskFacade, private joinerFacade: JoinerFacade) {}
 
@@ -30,6 +36,40 @@ export class ReportService {
     })
 
     return this.saveToCsvFile(this.TASK_STACK_KEY, taskStacksService);
+  }
+
+  async taskCompletedAndUncompletedByJoiner(): Promise<string> {
+    let tasks: Array<TaskJoinerDto> = await this.taskFacade.taskCompletedAndUncompletedByJoiner();
+    const joinerIds = tasks.map((task: TaskJoinerDto) => task.joiner_id);
+    const stackIds = tasks.map((task: TaskJoinerDto) => task.stack);
+    const roleIds = tasks.flatMap((task: TaskJoinerDto) => task.roles.split(","))
+                            .filter((v, i, a) => a.indexOf(v) === i)
+                            .map(x => parseInt(x));
+
+    const joiners: Array<JoinerDto> = await this.joinerFacade.getJoiners(joinerIds);
+    const stacks: Array<StackDto> = await this.joinerFacade.getStacks(stackIds);
+    const roles: Array<RoleDto> = await this.joinerFacade.getRoles(roleIds);
+    
+    const tasksJoinerService: Array<TaskJoinerService> = tasks.map((task: TaskJoinerDto) => {
+      let taskJoinerService = TaskJoinerService.toPresentation(task);
+
+      let joiner = joiners.find(joiner => joiner.id == taskJoinerService.joiner_id);
+      taskJoinerService.addJoinerData(joiner);
+
+      let stack = stacks.find(stack => stack.id == taskJoinerService.task_stack_id);
+      taskJoinerService.addStackData(stack);
+
+      let taskRoleIds: string[] = taskJoinerService.task_roles_ids.split(",")
+      let roleNames = taskRoleIds.map(taskRoleId => {
+        const roleFound = roles.find(role => parseInt(taskRoleId) === role.id);
+        return roleFound ? roleFound.name : "";
+      }).join("-");
+      taskJoinerService.addRoleData(roleNames);
+
+      return taskJoinerService;
+    });
+
+    return this.saveToCsvFile(this.TASKS_JOINER_KEY, tasksJoinerService);
   }
 
   async daysLeftToCompleteTaskByJoiner(): Promise<string> {

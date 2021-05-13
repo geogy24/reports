@@ -14,6 +14,12 @@ export class ReportController {
     res.download(`./files/${fileName}.csv`)
   }
 
+  @Get('/tasks')
+  async taskCompletedAndUncompletedByJoiner(@Res() res: Response): Promise<void> {
+    const fileName = await this.reportService.taskCompletedAndUncompletedByJoiner();
+    res.download(`./files/${fileName}.csv`)
+  }
+
   @Get('/days')
   async daysLeftToCompleteTaskByJoiner(@Res() res: Response): Promise<void> {
     const fileName = await this.reportService.daysLeftToCompleteTaskByJoiner();
