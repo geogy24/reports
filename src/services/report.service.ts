@@ -17,9 +17,9 @@ const ObjectsToCsv = require('objects-to-csv');
 
 @Injectable()
 export class ReportService {
-  private TASK_STACK_KEY: string = 'task_stack';
-  private TASK_DAY_KEY: string = 'task_day';
-  private TASKS_JOINER_KEY: string = 'tasks_joiner';
+  private static TASK_STACK_KEY: string = 'task_stack';
+  private static TASK_DAY_KEY: string = 'task_day';
+  private static TASKS_JOINER_KEY: string = 'tasks_joiner';
 
   constructor(private taskFacade: TaskFacade, private joinerFacade: JoinerFacade) {}
 
@@ -35,14 +35,14 @@ export class ReportService {
       return taskStackService;
     })
 
-    return this.saveToCsvFile(this.TASK_STACK_KEY, taskStacksService);
+    return this.saveToCsvFile(ReportService.TASK_STACK_KEY, taskStacksService);
   }
 
   async taskCompletedAndUncompletedByJoiner(): Promise<string> {
     let tasks: Array<TaskJoinerDto> = await this.taskFacade.taskCompletedAndUncompletedByJoiner();
     let tasksJoinerService = await this.fillPresentationData(tasks);
 
-    return this.saveToCsvFile(this.TASKS_JOINER_KEY, tasksJoinerService);
+    return this.saveToCsvFile(ReportService.TASKS_JOINER_KEY, tasksJoinerService);
   }
 
   private async fillPresentationData(tasks: Array<TaskJoinerDto>): Promise<Array<TaskJoinerService>> {
@@ -82,7 +82,7 @@ export class ReportService {
     let tasks: Array<TaskJoinerDto> = await this.taskFacade.taskCompletedAndUncompletedFilterByJoiner(joinerId);
     let tasksJoinerService = await this.fillPresentationData(tasks);
 
-    return this.saveToCsvFile(this.TASKS_JOINER_KEY, tasksJoinerService);
+    return this.saveToCsvFile(ReportService.TASKS_JOINER_KEY, tasksJoinerService);
   }
 
   async daysLeftToCompleteTaskByJoiner(): Promise<string> {
@@ -97,7 +97,7 @@ export class ReportService {
       return taskDayService;
     })
 
-    return this.saveToCsvFile(this.TASK_DAY_KEY, taskDaysService);
+    return this.saveToCsvFile(ReportService.TASK_DAY_KEY, taskDaysService);
   }
 
   private async saveToCsvFile(name: string, data: any): Promise<string> {
